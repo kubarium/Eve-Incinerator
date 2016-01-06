@@ -1,24 +1,89 @@
 <!doctype html>
-<title>Hello from Flask</title>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script>
+<html>
 
-<script type="text/javascript">
-    $(document).ready(function(){
-       $("#item").on('keyup', searchItem);
-    });
-    
-    function searchItem(event){
-        if($(event.currentTarget).val().length>=3){
-            $.ajax({
-                url:"/am",
-                dataType:"json",
-                success:function(data){
-                    console.log(data);
-                }
-            });
-        }
-    }
-    
-    
-</script>
-<input type="text" id="item" value="aaa">
+<head>
+	<title>Hello from Flask</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function () {
+			$("#search").on('keyup', searchItem);
+		});
+
+		function searchItem(event) {
+			if ($(event.currentTarget).val().length >= 3) {
+
+				var data = {};
+				data.am = $(event.currentTarget).val();
+
+				$.ajax({
+					url: "/am",
+					dataType: "json",
+					method: "POST",
+					data: $.param(data),
+					success: function (data) {
+						console.log(data);
+					}
+				});
+			}
+		}
+	</script>
+	<style type="text/css">
+		body {
+			border: 1px solid red;
+		}
+		
+		.panel {
+			background: blue;
+			height: 400px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-3">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Search and Filter</h3>
+					</div>
+					<div class="panel-body">
+						<div class="container-fluid">
+							<div class="row well well-sm">
+								<label for="search">Search</label>
+								<input type="text" class="form-control" id="search" placeholder="Search" value="nano">
+							</div>
+							<div class="row well well-sm">
+								<label for="listOfItems">Filter</label>
+								<div type="text" class="form-control" id="listOfItems"></div>
+							</div>
+
+							<div class="row well well-sm">
+								<label for="listOfIngredients">What can I cook up?</label>
+								<div type="text" class="form-control" id="listOfIngredients"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+			<div class="col-md-9">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">BP</h3>
+					</div>
+					<div class="panel-body">
+						<div class="blueprints"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
