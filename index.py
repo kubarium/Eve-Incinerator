@@ -15,6 +15,7 @@ def hello():
 def fuck():
     data = {"siksinler":"seni"}
     return json.dumps(data)
+    #SELECT * FROM invTypes AS types, industryActivityMaterials as materials WHERE materials.materialTypeID = 2869 AND materials.typeID = types.typeID AND types.published = 1 ORDER BY types.typeName;
 
 
 if __name__ == "__main__":
