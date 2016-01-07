@@ -6,9 +6,6 @@ import json
 import sqlite3
 
 
-
-
-
 app = Flask(__name__)
 '''
 app.config.update(
@@ -31,29 +28,31 @@ def fuck():
 
 
     try:
-        conn = sqlite3.connect("sqlite-latest.db")
+        conn = sqlite3.connect("sqlite-latest.sqlite")
+        conn.text_factory =  lambda x: str(x, 'latin1')
         c = conn.cursor()
 
         #typeName = request.args.get('am', '')
 
 
-        list = list()
-        for row in c.execute("SELECT * FROM invTypes WHERE typeName LIKE '%nano%'"):
-            list.append(5)
+        list = []
+
+        for row in c.execute("SELECT * FROM invTypes WHERE typeName LIKE ?", ("%nano%",)):
+            list.append(row)
         #rv = c.fetchall()
 
         data = {
-            "bunu gonderdin lan pic":"yalarim",
+            "am":"sikmek istiyorum",
             "sik":list
         }
 
         return json.dumps(data)
 
-    except :
+    except sqlite3.Error as er:
 
         data = {
-            "bunu gonderdin lan pic":"asdasdalarim",
-            "sik":'amsin'
+            "yardirsan":"artik",
+            "sik":er
         }
 
         return json.dumps(data)
@@ -61,15 +60,6 @@ def fuck():
 
 
 
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
+    #fuck()
     app.run(debug=True, use_reloader=True)
