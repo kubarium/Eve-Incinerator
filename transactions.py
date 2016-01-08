@@ -20,6 +20,7 @@ class Transactions:
         list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
 
         data = {
+            "items":True,
             "package":list
         }
 
@@ -49,7 +50,9 @@ class Transactions:
             list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
         else:
             list = []
+
         data = {
+            "blueprints":True,
             "package":list
         }
 

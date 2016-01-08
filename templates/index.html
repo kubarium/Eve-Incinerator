@@ -12,36 +12,65 @@
 
 	<script type="text/javascript">
 		$(document).ready(function () {
+			var ingredients = JSON.parse(localStorage.getItem("ingredients"));
+			if (ingredients) {
+				$('#listOfIngredients').html(ingredients);
+				enableButtons("delete");
+			}
+
+
+
 			$("#btnSearch").on('click', searchItem);
 			$("#searchText").on('keypress', searchItem);
 
 
-			$("#btnCook").on('click', cook);
+			$("#btnCook").on('click', cookIngredients);
 
-			$("#btnEmpty").on('click', empty);
-
-
+			$("#btnEmpty").on('click', emptyIngredients);
 
 			$("#listOfIngredients").droppable({
 				drop: function (event, ui) {
-					var item = $(ui.draggable).clone();
-					$("#listOfIngredients").append(item);
-					//Configure the button to remove the ingredient
-					$("#listOfIngredients li:last button.delete").removeClass("hidden").on("click", function (event) {
-						$(event.target).parents("li").remove();
-					});
-					
-					$('#listOfIngredients li').removeClass("odd").filter(":even").addClass("odd");
+
+					$("#listOfIngredients").append($(ui.draggable).clone());
+
+					oddifyLines('#listOfIngredients li');
+
+					enableButtons("delete");
+					//store ingredients in local storage
+					storeIngredients();
 				}
 			});
 
 		});
 
-		function empty() {
-			$("#listOfIngredients li").remove();
+		function enableButtons(type, selector) {
+			if (type == "delete") {
+				$(".delete").removeClass("hidden");
+
+				//Configure the button to remove the ingredient
+				$(".delete").on("click", function (event) {
+					$(event.target).parents("li").remove();
+					storeIngredients();
+				});
+			} else {
+				$(".info").removeClass("hidden");
+			}
 		}
 
-		function cook(event) {
+		function oddifyLines(selector) {
+			$(selector).removeClass("odd").filter(":even").addClass("odd");
+		}
+
+		function storeIngredients() {
+			localStorage.setItem("ingredients", JSON.stringify($('#listOfIngredients').html()));
+		}
+
+		function emptyIngredients() {
+			$("#listOfIngredients li").remove();
+			localStorage.clear();
+		}
+
+		function cookIngredients(event) {
 
 			var data = {
 				ingredients: []
@@ -66,14 +95,12 @@
 
 		function processCookedItems(data) {
 			console.log(data.package);
-			$('#listOfBlueprints').html($.templates("#listOfItemsTmpl").render(data.package));
-			$('#listOfBlueprints button.info').removeClass("hidden");
-			
-			$('#listOfBlueprints li').filter(":even").addClass("odd");
-			
+			$("#listOfBlueprints").html($.templates("#listOfItemsTmpl").render(data.package));
+
+			enableButtons("info");
+			oddifyLines("#listOfBlueprints li");
 
 			$("#numberOfInvestmentOptions").text(data.package.length);
-
 		}
 
 		function searchItem(event) {
@@ -117,8 +144,8 @@
 					bottom: 0
 				}
 			});
-			
-			$('#listOfItems li').filter(":even").addClass("odd");
+
+			oddifyLines('#listOfItems li');
 		}
 	</script>
 	<style type="text/css">
@@ -141,13 +168,11 @@
 			border: 1px dashed;
 		}
 		
-		.odd{
+		.odd {
 			background: #DEDEDE;
 		}
 		
-		.even{
-			
-		}
+		.even {}
 	</style>
 	<script id="listOfItemsTmpl" type="text/x-jsrender">
 		{% raw %}
@@ -156,8 +181,9 @@
 				<img class="media-object" src="static/Types/{{:id}}_32.png">
 			</div>
 			<div class="media-body">
-				<button class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove hidden delete"></button>
-				<button class="btn btn-default btn-sm pull-right glyphicon glyphicon-info-sign hidden info" onclick="CCPEVE.showInfo({{:id}})"></button>
+				<button class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove delete hidden"></button>
+				<button class="btn btn-default btn-sm pull-right glyphicon glyphicon-info-sign info hidden" onclick="CCPEVE.showInfo({{:id}})"></button>
+
 				<h5 class="list-group-item-heading" data-id="{{:id}}">{{:name}}</h5>
 				<p class="list-group-item-text hidden">{{:description}}</p>
 			</div>
