@@ -14,8 +14,8 @@
 		$(document).ready(function () {
 			var ingredients = JSON.parse(localStorage.getItem("ingredients"));
 			if (ingredients) {
-				$('#listOfIngredients').html(ingredients);
-				enableButtons("delete");
+				$("#listOfIngredients").html(ingredients);
+				enableButtons("delete","#listOfIngredients");
 			}
 
 
@@ -35,7 +35,7 @@
 
 					oddifyLines('#listOfIngredients li');
 
-					enableButtons("delete");
+					enableButtons("delete", "#listOfIngredients");
 					//store ingredients in local storage
 					storeIngredients();
 				}
@@ -44,17 +44,16 @@
 		});
 
 		function enableButtons(type, selector) {
+			$("button."+type, selector).removeClass("hidden");
+			
 			if (type == "delete") {
-				$(".delete").removeClass("hidden");
 
 				//Configure the button to remove the ingredient
 				$(".delete").on("click", function (event) {
 					$(event.target).parents("li").remove();
 					storeIngredients();
 				});
-			} else {
-				$(".info").removeClass("hidden");
-			}
+			} 
 		}
 
 		function oddifyLines(selector) {
@@ -97,7 +96,7 @@
 			console.log(data.package);
 			$("#listOfBlueprints").html($.templates("#listOfItemsTmpl").render(data.package));
 
-			enableButtons("info");
+			enableButtons("info", "#listOfBlueprints");
 			oddifyLines("#listOfBlueprints li");
 
 			$("#numberOfInvestmentOptions").text(data.package.length);
