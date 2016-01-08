@@ -5,6 +5,9 @@
 	<title>Hello from Flask</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+
+	<link rel="stylesheet" href="static/jquery-ui.min.css">
+
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
 	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
@@ -12,11 +15,14 @@
 
 	<script type="text/javascript">
 		$(document).ready(function () {
-			var ingredients = JSON.parse(localStorage.getItem("ingredients"));
+			var ingredients = JSON.parse(localStorage.getItem("default.ingredients"));
 			if (ingredients) {
 				$("#listOfIngredients").html(ingredients);
-				enableButtons("delete","#listOfIngredients");
+				enableButtons("delete", "#listOfIngredients");
 			}
+
+
+			$("#dialog button").on("click", duplicateList);
 
 
 
@@ -26,7 +32,11 @@
 
 			$("#btnCook").on('click', cookIngredients);
 
-			$("#btnEmpty").on('click', emptyIngredients);
+			$("#btnDeleteList").on('click', deleteList);
+			$("#btnEmptyList").on('click', emptyIngredients);
+			$("#btnDuplicate").on('click', openDialog);
+
+
 
 			$("#listOfIngredients").droppable({
 				drop: function (event, ui) {
@@ -41,11 +51,48 @@
 				}
 			});
 
+			dialog = $("#dialog").dialog({
+				autoOpen:false,
+				buttons: {
+					"Add": duplicateList,
+					Cancel: function () {
+						dialog.dialog("close");
+					}
+				},
+				close: function () {
+					dialog.dialog("close");
+				}
+			});
+
 		});
 
+
+
+
+
+		function deleteList() {
+			delete localStorage.getItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients");
+		}
+
+		function duplicateList() {
+			var newList = $("#newListName").val();
+
+			$("#currentList").text(newList);
+			$(".divider").before('<li><a href="#">' + newList + '</a></li>');
+
+
+			localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
+
+			$("#dialog").dialog("close");
+		}
+
+		function openDialog() {
+			dialog.dialog("open");
+		}
+
 		function enableButtons(type, selector) {
-			$("button."+type, selector).removeClass("hidden");
-			
+			$("button." + type, selector).removeClass("hidden");
+
 			if (type == "delete") {
 
 				//Configure the button to remove the ingredient
@@ -53,7 +100,7 @@
 					$(event.target).parents("li").remove();
 					storeIngredients();
 				});
-			} 
+			}
 		}
 
 		function oddifyLines(selector) {
@@ -61,27 +108,21 @@
 		}
 
 		function storeIngredients() {
-			localStorage.setItem("ingredients", JSON.stringify($('#listOfIngredients').html()));
+			localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
 		}
 
 		function emptyIngredients() {
 			$("#listOfIngredients li").remove();
-			localStorage.clear();
+			storeIngredients();
 		}
 
 		function cookIngredients(event) {
 
 			var data = {
-				ingredients: []
+				ingredients: $.map($("#listOfIngredients h5"), function (element, index) {
+					return $(element).data("id")
+				}).join(",")
 			};
-
-			$("#listOfIngredients h5").each(function (index, element) {
-				data.ingredients.push($(element).data("id"))
-			});
-
-			data.ingredients = data.ingredients.join(',');
-
-			console.log($.param(data));
 
 			$.ajax({
 				url: "/cook",
@@ -171,7 +212,9 @@
 			background: #DEDEDE;
 		}
 		
-		.even {}
+		#dialog {
+			display: none;
+		}
 	</style>
 	<script id="listOfItemsTmpl" type="text/x-jsrender">
 		{% raw %}
@@ -217,9 +260,19 @@
 							<div class="row well well-sm">
 								<label for="listOfIngredients">What can I cook up?</label>
 								<ul class="list-group" id="listOfIngredients"></ul>
+								<div class="btn-group">
+									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<span id="currentList">Default</span> <span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu">
+										<li><a href="#">Default</a></li>
+										<li role="separator" class="divider"></li>
+										<li><a href="#" id="btnDeleteList">Delete List</a></li>
+										<li><a href="#" id="btnEmptyList">Empty List</a></li>
+										<li><a href="#" id="btnDuplicate">Save as a New List</a></li>
+									</ul>
+								</div>
 								<button class="btn btn-default pull-right" id="btnCook">Cook</button>
-
-								<button class="btn btn-default" id="btnEmpty">Empty</button>
 							</div>
 						</div>
 					</div>
@@ -242,6 +295,9 @@
 		</div>
 	</div>
 
+	<div id="dialog" title="Save as a New List">
+			<input type="text" id="newListName" value="" placeholder="List Name" class="form-control">
+	</div>
 
 </body>
 
