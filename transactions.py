@@ -42,14 +42,13 @@ class Transactions:
         for spit in cauldron:
             blueprints = blueprints.intersection(spit)
 
+        if blueprints :
+            query = "SELECT typeID as id, typeName as name, description FROM invTypes WHERE published=1 AND (" + " OR ".join(("typeID = " + str(blueprint) for blueprint in blueprints)) + ") ORDER BY name"
+            cur.execute(query)
 
-        query = "SELECT typeID as id, typeName as name, description FROM invTypes WHERE published=1 AND (" + " OR ".join(("typeID = " + str(blueprint) for blueprint in blueprints)) + ") ORDER BY name"
-        cur.execute(query)
-
-        #typeID IN (?) ORDER BY typeID", (",".join(str(blueprint) for blueprint in blueprints)))
-
-        list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
-
+            list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
+        else:
+            list = []
         data = {
             "package":list
         }

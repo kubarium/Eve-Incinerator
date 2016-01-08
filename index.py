@@ -49,5 +49,5 @@ def retrieveRequestFor(variable, request):
 if __name__ == "__main__":
 
     #Transactions().searchByItemName("nano")
-    #Transactions().cook([2869])
+    Transactions().cook(["2371"])
     app.run(debug=True, use_reloader=True)
