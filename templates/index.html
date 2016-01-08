@@ -2,88 +2,191 @@
 <html>
 
 <head>
-	<title>Hello from Flask</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <title>Hello from Flask</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.71/jsrender.min.js"></script>
 
-	<script type="text/javascript">
-		$(document).ready(function () {
-			$("#search").on('keyup', searchItem);
-		});
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#btnSearch").on('click', searchItem);
 
-		function searchItem(event) {
-			if ($(event.currentTarget).val().length >= 3) {
+            $("#btnCook").on('click', cook);
 
-				var data = {};
-				data.am = $(event.currentTarget).val();
+            $("#listOfIngredients").droppable({
+                drop: function(event, ui) {
+                    var item = $(ui.draggable).clone();
+                    $("#listOfIngredients").append(item);
+                    //Configure the button to remove the ingredient
+                    $("#listOfIngredients li:last button.delete").removeClass("hidden").on("click", function(event) {
+                        $(event.target).parents("li").remove();
+                    });
+                }
+            });
 
-				$.ajax({
-					url: "/am",
-					dataType: "json",
-					method: "POST",
-					data: $.param(data),
-					success: function (data) {
-						console.log(data);
-					}
-				});
-			}
-		}
-	</script>
-	<style type="text/css">
-		body {
-			border: 1px solid red;
-		}
-		
-		.panel {
-			background: blue;
-			height: 400px;
-		}
-	</style>
+        });
+
+        function cook(event) {
+
+            var data = {
+                ingredients: []
+            };
+
+            $("#listOfIngredients h5").each(function(index, element) {
+                data.ingredients.push($(element).data("id"))
+            });
+            
+            data.ingredients = data.ingredients.join(',');
+
+            console.log($.param(data));
+
+            $.ajax({
+                url: "/cook",
+                dataType: "json",
+                method: "POST",
+                data: $.param(data),
+                success: processCookedItems
+            });
+        }
+
+        function processCookedItems(data) {
+            console.log(data.package);
+            $('#listOfBlueprints').html($.templates("#listOfItemsTmpl").render(data.package));
+            $('#listOfBlueprints button.info').removeClass("hidden");
+            
+            $("#numberOfInvestmentOptions").text(data.package.length);
+            
+        }
+
+        function searchItem(event) {
+            var data = {};
+            data.itemName = $.trim($("#searchText").val());
+
+            $.ajax({
+                url: "/searchByItemName",
+                dataType: "json",
+                method: "POST",
+                data: $.param(data),
+                success: processSearchedItems
+            });
+        }
+
+        function processSearchedItems(data) {
+            console.log(data.package);
+            $('#listOfItems').html($.templates("#listOfItemsTmpl").render(data.package));
+            $('#listOfItems li').draggable({
+                start: function() {
+                    $('#listOfIngredients').addClass('droppableArea')
+                },
+                stop: function() {
+                    $('#listOfIngredients').removeClass('droppableArea')
+                },
+                axis: "y",
+                containment: ".panel",
+                revert: true,
+                zIndex: 100,
+                helper: "clone",
+                cursor: "crosshair",
+                cursorAt: {
+                    bottom: 0
+                }
+            });
+        }
+
+    </script>
+    <style type="text/css">
+        body {}
+        
+        .panel {
+            
+        }
+        
+        #listOfItems,
+        #listOfIngredients {
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        #listOfBlueprints{
+            height: 617px;
+            overflow-y: auto;
+        }
+        
+        .droppableArea {
+            border: 1px dashed;
+        }
+
+    </style>
+    <script id="listOfItemsTmpl" type="text/x-jsrender">
+        {% raw %}
+        <li class="list-group-item">
+            <div class="media-left">
+                <img class="media-object" src="static/Types/{{:id}}_32.png">
+            </div>
+            <div class="media-body">
+                <button class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove hidden delete"></button>
+                <button class="btn btn-default btn-sm pull-right glyphicon glyphicon-info-sign hidden info" onclick="CCPEVE.showInfo({{:id}})"></button>
+                <h5 class="list-group-item-heading" data-id="{{:id}}">{{:name}}</h5>
+                <p class="list-group-item-text hidden">{{:description}}</p>
+            </div>
+        </li>
+        {% endraw %}
+    </script>
 </head>
 
 <body>
-	<div class="container">
-		<div class="row">
-			<div class="col-md-3">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h3 class="panel-title">Search and Filter</h3>
-					</div>
-					<div class="panel-body">
-						<div class="container-fluid">
-							<div class="row well well-sm">
-								<label for="search">Search</label>
-								<input type="text" class="form-control" id="search" placeholder="Search" value="nano">
-							</div>
-							<div class="row well well-sm">
-								<label for="listOfItems">Filter</label>
-								<div type="text" class="form-control" id="listOfItems"></div>
-							</div>
 
-							<div class="row well well-sm">
-								<label for="listOfIngredients">What can I cook up?</label>
-								<div type="text" class="form-control" id="listOfIngredients"></div>
-							</div>
-						</div>
-					</div>
-				</div>
 
-			</div>
-			<div class="col-md-9">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h3 class="panel-title">BP</h3>
-					</div>
-					<div class="panel-body">
-						<div class="blueprints"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Search and Filter</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="container-fluid">
+                            <div class="row well well-sm input-group">
+                                <input type="text" class="form-control" id="searchText" placeholder="Search" value="nano-">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default" id="btnSearch" type="button">Go!</button>
+                                </span>
+                            </div>
+                            <div class="row well well-sm">
+                                <label for="listOfItems">Filter</label>
+                                <ul class="list-group" id="listOfItems"></ul>
+                            </div>
+
+                            <div class="row well well-sm">
+                                <label for="listOfIngredients">What can I cook up?</label>
+                                <ul class="list-group" id="listOfIngredients"></ul>
+                                <button class="btn btn-default pull-right" id="btnCook">Cook</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-xs-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">BP</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="list-group" id="listOfBlueprints"></ul>
+                    </div>
+                    <div class="panel-footer">
+                        <span class="badge" id="numberOfInvestmentOptions">0</span> Blueprints to Invest
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </body>
 
 </html>
