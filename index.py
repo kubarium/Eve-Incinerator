@@ -1,20 +1,12 @@
-from flask import Flask, render_template, request, g
-from bs4 import BeautifulSoup
-import urllib.request
-import re
+from flask import Flask, render_template, request
 import json
-import sqlite3
 from transactions import Transactions
+from flask_bootstrap import Bootstrap
 
 
 app = Flask(__name__)
+#Bootstrap(app)
 
-
-'''
-app.config.update(
-    SERVER_NAME="http://localhost:4500"
-)
-'''
 @app.route('/')
 def hello():
     return render_template('index.html')
@@ -28,14 +20,6 @@ def searchByItemName():
 @app.route('/cook', methods=['POST','GET'])
 def cook():
     transactions = Transactions()
-    '''
-
-    data = {
-            "package":retrieveRequestFor('ingredients', request).split(","),
-            "len":5
-        }
-    return json.dumps(data)
-    '''
 
     return transactions.cook(retrieveRequestFor('ingredients', request).split(","))
 
@@ -49,5 +33,5 @@ def retrieveRequestFor(variable, request):
 if __name__ == "__main__":
 
     #Transactions().searchByItemName("nano")
-    Transactions().cook(["2371"])
+    #Transactions().cook(["2371"])
     app.run(debug=True, use_reloader=True)

@@ -1,0 +1,20 @@
+body {}
+.panel {}
+#listOfItems,
+#listOfIngredients {
+    height: 200px;
+    overflow-y: auto;
+}
+#listOfBlueprints {
+    height: 617px;
+    overflow-y: auto;
+}
+.droppableArea {
+    border: 1px dashed;
+}
+.odd {
+    background: #DEDEDE;
+}
+#dialog {
+    display: none;
+}

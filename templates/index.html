@@ -2,303 +2,98 @@
 <html>
 
 <head>
-	<title>Hello from Flask</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
-
-	<link rel="stylesheet" href="static/jquery-ui.min.css">
-
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/0.9.71/jsrender.min.js"></script>
-
-	<script type="text/javascript">
-		$(document).ready(function () {
-			var ingredients = JSON.parse(localStorage.getItem("default.ingredients"));
-			if (ingredients) {
-				$("#listOfIngredients").html(ingredients);
-				enableButtons("delete", "#listOfIngredients");
-			}
+    <title>Eve Incinerator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/jquery-ui.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
 
 
-			$("#dialog button").on("click", duplicateList);
-
-
-
-			$("#btnSearch").on('click', searchItem);
-			$("#searchText").on('keypress', searchItem);
-
-
-			$("#btnCook").on('click', cookIngredients);
-
-			$("#btnDeleteList").on('click', deleteList);
-			$("#btnEmptyList").on('click', emptyIngredients);
-			$("#btnDuplicate").on('click', openDialog);
-
-
-
-			$("#listOfIngredients").droppable({
-				drop: function (event, ui) {
-
-					$("#listOfIngredients").append($(ui.draggable).clone());
-
-					oddifyLines('#listOfIngredients li');
-
-					enableButtons("delete", "#listOfIngredients");
-					//store ingredients in local storage
-					storeIngredients();
-				}
-			});
-
-			dialog = $("#dialog").dialog({
-				autoOpen:false,
-				buttons: {
-					"Add": duplicateList,
-					Cancel: function () {
-						dialog.dialog("close");
-					}
-				},
-				close: function () {
-					dialog.dialog("close");
-				}
-			});
-
-		});
-
-
-
-
-
-		function deleteList() {
-			delete localStorage.getItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients");
-		}
-
-		function duplicateList() {
-			var newList = $("#newListName").val();
-
-			$("#currentList").text(newList);
-			$(".divider").before('<li><a href="#">' + newList + '</a></li>');
-
-
-			localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
-
-			$("#dialog").dialog("close");
-		}
-
-		function openDialog() {
-			dialog.dialog("open");
-		}
-
-		function enableButtons(type, selector) {
-			$("button." + type, selector).removeClass("hidden");
-
-			if (type == "delete") {
-
-				//Configure the button to remove the ingredient
-				$(".delete").on("click", function (event) {
-					$(event.target).parents("li").remove();
-					storeIngredients();
-				});
-			}
-		}
-
-		function oddifyLines(selector) {
-			$(selector).removeClass("odd").filter(":even").addClass("odd");
-		}
-
-		function storeIngredients() {
-			localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
-		}
-
-		function emptyIngredients() {
-			$("#listOfIngredients li").remove();
-			storeIngredients();
-		}
-
-		function cookIngredients(event) {
-
-			var data = {
-				ingredients: $.map($("#listOfIngredients h5"), function (element, index) {
-					return $(element).data("id")
-				}).join(",")
-			};
-
-			$.ajax({
-				url: "/cook",
-				dataType: "json",
-				method: "POST",
-				data: $.param(data),
-				success: processCookedItems
-			});
-		}
-
-		function processCookedItems(data) {
-			console.log(data.package);
-			$("#listOfBlueprints").html($.templates("#listOfItemsTmpl").render(data.package));
-
-			enableButtons("info", "#listOfBlueprints");
-			oddifyLines("#listOfBlueprints li");
-
-			$("#numberOfInvestmentOptions").text(data.package.length);
-		}
-
-		function searchItem(event) {
-
-			if (event.type == "keypress" && event.which != 13)
-				return;
-
-			var data = {};
-			data.itemName = $.trim($("#searchText").val());
-
-			$.ajax({
-				url: "/searchByItemName",
-				crossDomain: true,
-				dataType: "json",
-				method: "POST",
-				data: $.param(data),
-				success: processSearchedItems,
-				error: function (jqXHR, textStatus, errorThrown) {
-					console.log(jqXHR, textStatus, errorThrown);
-				}
-			});
-		}
-
-		function processSearchedItems(data) {
-			console.log(data.package);
-			$('#listOfItems').html($.templates("#listOfItemsTmpl").render(data.package));
-			$('#listOfItems li').draggable({
-				start: function () {
-					$('#listOfIngredients').addClass('droppableArea')
-				},
-				stop: function () {
-					$('#listOfIngredients').removeClass('droppableArea')
-				},
-				axis: "y",
-				containment: ".panel",
-				revert: true,
-				zIndex: 100,
-				helper: "clone",
-				cursor: "crosshair",
-				cursorAt: {
-					bottom: 0
-				}
-			});
-
-			oddifyLines('#listOfItems li');
-		}
-	</script>
-	<style type="text/css">
-		body {}
-		
-		.panel {}
-		
-		#listOfItems,
-		#listOfIngredients {
-			height: 200px;
-			overflow-y: auto;
-		}
-		
-		#listOfBlueprints {
-			height: 617px;
-			overflow-y: auto;
-		}
-		
-		.droppableArea {
-			border: 1px dashed;
-		}
-		
-		.odd {
-			background: #DEDEDE;
-		}
-		
-		#dialog {
-			display: none;
-		}
-	</style>
-	<script id="listOfItemsTmpl" type="text/x-jsrender">
-		{% raw %}
-		<li class="list-group-item">
-			<div class="media-left">
-				<img class="media-object" src="static/Types/{{:id}}_32.png">
-			</div>
-			<div class="media-body">
-				<button class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove delete hidden"></button>
-				<button class="btn btn-default btn-sm pull-right glyphicon glyphicon-info-sign info hidden" onclick="CCPEVE.showInfo({{:id}})"></button>
-
-				<h5 class="list-group-item-heading" data-id="{{:id}}">{{:name}}</h5>
-				<p class="list-group-item-text hidden">{{:description}}</p>
-			</div>
-		</li>
-		{% endraw %}
-	</script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/bootstrap.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/jquery-ui.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/jsrender.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/script.js') }}"></script>
 </head>
 
 <body>
-
-
-	<div class="container">
-		<div class="row">
-			<div class="col-xs-6">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h3 class="panel-title">Search and Filter</h3>
-					</div>
-					<div class="panel-body">
-						<div class="container-fluid">
-							<div class="row well well-sm input-group">
-								<input type="text" class="form-control" id="searchText" placeholder="Search" value="nano-">
-								<span class="input-group-btn">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Search and Filter</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="container-fluid">
+                            <div class="row well well-sm input-group">
+                                <input type="text" class="form-control" id="searchText" placeholder="Search" value="nano-">
+                                <span class="input-group-btn">
 									<button class="btn btn-default" id="btnSearch" type="button">Go!</button>									
                                 </span>
-							</div>
-							<div class="row well well-sm">
-								<label for="listOfItems">Filter</label>
-								<ul class="list-group" id="listOfItems"></ul>
-							</div>
+                            </div>
+                            <div class="row well well-sm">
+                                <label for="listOfItems">Filter</label>
+                                <ul class="list-group" id="listOfItems"></ul>
+                            </div>
 
-							<div class="row well well-sm">
-								<label for="listOfIngredients">What can I cook up?</label>
-								<ul class="list-group" id="listOfIngredients"></ul>
-								<div class="btn-group">
-									<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<span id="currentList">Default</span> <span class="caret"></span>
-									</button>
-									<ul class="dropdown-menu">
-										<li><a href="#">Default</a></li>
-										<li role="separator" class="divider"></li>
-										<li><a href="#" id="btnDeleteList">Delete List</a></li>
-										<li><a href="#" id="btnEmptyList">Empty List</a></li>
-										<li><a href="#" id="btnDuplicate">Save as a New List</a></li>
-									</ul>
-								</div>
-								<button class="btn btn-default pull-right" id="btnCook">Cook</button>
-							</div>
-						</div>
-					</div>
-				</div>
+                            <div class="row well well-sm">
+                                <label for="listOfIngredients">What can I cook up?</label>
+                                <ul class="list-group" id="listOfIngredients"></ul>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <span id="currentList">Default</span> <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#">Default</a></li>
+                                        <li role="separator" class="divider"></li>
+                                        <li><a href="#" id="btnDeleteList">Delete List</a></li>
+                                        <li><a href="#" id="btnEmptyList">Empty List</a></li>
+                                        <li><a href="#" id="btnDuplicate">Save as a New List</a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-default pull-right" id="btnCook">Cook</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-			</div>
-			<div class="col-xs-6">
-				<div class="panel panel-default">
-					<div class="panel-heading">
-						<h3 class="panel-title">BP</h3>
-					</div>
-					<div class="panel-body">
-						<ul class="list-group  table-striped" id="listOfBlueprints"></ul>
-					</div>
-					<div class="panel-footer">
-						<span class="badge" id="numberOfInvestmentOptions">0</span> Blueprints to Invest
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+            </div>
+            <div class="col-xs-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">BP</h3>
+                    </div>
+                    <div class="panel-body">
+                        <ul class="list-group  table-striped" id="listOfBlueprints"></ul>
+                    </div>
+                    <div class="panel-footer">
+                        <span class="badge" id="numberOfInvestmentOptions">0</span> Blueprints to Invest
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-	<div id="dialog" title="Save as a New List">
-			<input type="text" id="newListName" value="" placeholder="List Name" class="form-control">
-	</div>
+    <div id="dialog" title="Save as a New List">
+        <input type="text" id="newListName" value="" placeholder="List Name" class="form-control">
+    </div>
 
+    <script id="listOfItemsTmpl" type="text/x-jsrender">
+        {% raw %}
+        <li class="list-group-item">
+            <div class="media-left">
+                <img class="media-object" src="static/Types/{{:id}}_32.png">
+            </div>
+            <div class="media-body">
+                <button class="btn btn-danger btn-sm pull-right glyphicon glyphicon-remove delete hidden"></button>
+                <button class="btn btn-default btn-sm pull-right glyphicon glyphicon-info-sign info hidden" onclick="CCPEVE.showInfo({{:id}})"></button>
+
+                <h5 class="list-group-item-heading" data-id="{{:id}}">{{:name}}</h5>
+                <p class="list-group-item-text hidden">{{:description}}</p>
+            </div>
+        </li>
+        {% endraw %}
+    </script>
 </body>
 
 </html>
