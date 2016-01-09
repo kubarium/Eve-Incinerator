@@ -1,10 +1,12 @@
+/*global $, localStorage, document, window */
 $(document).ready(function () {
+    
+    
     var ingredients = JSON.parse(localStorage.getItem("default.ingredients"));
     if (ingredients) {
         $("#listOfIngredients").html(ingredients);
         enableButtons("delete", "#listOfIngredients");
     }
-
 
     $("#dialog button").on("click", duplicateList);
 
@@ -35,7 +37,7 @@ $(document).ready(function () {
         }
     });
 
-    dialog = $("#dialog").dialog({
+    window.dialog = $("#dialog").dialog({
         autoOpen: false,
         buttons: {
             "Add": duplicateList,
@@ -100,11 +102,11 @@ function emptyIngredients() {
     storeIngredients();
 }
 
-function cookIngredients(event) {
+function cookIngredients() {
 
     var data = {
         ingredients: $.map($("#listOfIngredients h5"), function (element, index) {
-            return $(element).data("id")
+            return $(element).data("id");
         }).join(",")
     };
 
@@ -114,15 +116,11 @@ function cookIngredients(event) {
         dataType: "json",
         method: "POST",
         data: $.param(data),
-        success: processCookedItems,
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR, textStatus, errorThrown);
-        }
+        success: processCookedItems
     });
 }
 
 function processCookedItems(data) {
-    console.log(data.package);
     $("#listOfBlueprints").html($.templates("#listOfItemsTmpl").render(data.package));
 
     enableButtons("info", "#listOfBlueprints");
@@ -133,8 +131,9 @@ function processCookedItems(data) {
 
 function searchItem(event) {
 
-    if (event.type == "keypress" && event.which != 13)
+    if (event.type == "keypress" && event.which != 13){
         return;
+    }
 
     var data = {};
     data.itemName = $.trim($("#searchText").val());
@@ -145,22 +144,18 @@ function searchItem(event) {
         dataType: "json",
         method: "POST",
         data: $.param(data),
-        success: processSearchedItems,
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.log(jqXHR, textStatus, errorThrown);
-        }
+        success: processSearchedItems
     });
 }
 
 function processSearchedItems(data) {
-    console.log(data.package);
     $('#listOfItems').html($.templates("#listOfItemsTmpl").render(data.package));
     $('#listOfItems li').draggable({
         start: function () {
-            $('#listOfIngredients').addClass('droppableArea')
+            $('#listOfIngredients').addClass('droppableArea');
         },
         stop: function () {
-            $('#listOfIngredients').removeClass('droppableArea')
+            $('#listOfIngredients').removeClass('droppableArea');
         },
         axis: "y",
         containment: ".panel",
