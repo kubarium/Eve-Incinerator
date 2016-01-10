@@ -4,7 +4,7 @@ import json
 class Transactions:
 
 
-    def __init__(self, database = "sqlite-latest.sqlite"):
+    def __init__(self, database = "evedb.sqlite"):
 
         self.conn = sqlite3.connect(database)
         self.conn.text_factory = lambda x: str(x, 'latin1')
@@ -14,8 +14,23 @@ class Transactions:
     def searchByItemName(self, name):
         cur = self.cur
 
-        cur.execute("SELECT typeID as id, typeName as name, description FROM invTypes WHERE typeName LIKE ? AND published = 1 ORDER BY typeID", ("%"+name+"%",))
-
+        cur.execute("""
+            SELECT typeID as id, typeName as name, description FROM invTypes i
+            LEFT OUTER JOIN invGroups ig ON ig.groupID = i.groupID
+            LEFT OUTER JOIN invCategories ic ON ic.categoryID = ig.categoryID
+            WHERE ic.categoryID IS NOT 9
+            AND i.published = 1
+            AND i.typeName LIKE ?
+            ORDER BY i.typeName
+            """, ("%"+name+"%",))
+        '''
+        cur.execute("""
+            SELECT typeID as id, typeName as name, description FROM invTypes i
+            WHERE i.published = 1
+            AND i.typeName LIKE ?
+            ORDER BY i.typeName
+            """, ("%"+name+"%",))
+        '''
         list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
 
         data = {

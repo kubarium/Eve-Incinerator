@@ -1,12 +1,5 @@
 /*global $, localStorage, document, window */
 $(document).ready(function () {
-    
-    
-    var ingredients = JSON.parse(localStorage.getItem("default.ingredients"));
-    if (ingredients) {
-        $("#listOfIngredients").html(ingredients);
-        enableButtons("delete", "#listOfIngredients");
-    }
 
     $("#dialog button").on("click", duplicateList);
 
@@ -52,12 +45,19 @@ $(document).ready(function () {
 
 });
 
-
+function enableStoredLists(){
+    var ingredients = JSON.parse(localStorage.getItem("default.ingredients"));
+    if (ingredients) {
+        $("#listOfIngredients").html(ingredients);
+        enableButtons("delete", "#listOfIngredients");
+    }
+}
 
 
 
 function deleteList() {
-    delete localStorage.getItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients");
+    
+    //delete localStorage.getItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients");
 }
 
 function duplicateList() {
@@ -66,8 +66,8 @@ function duplicateList() {
     $("#currentList").text(newList);
     $(".divider").before('<li><a href="#">' + newList + '</a></li>');
 
-
-    localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
+    
+    //localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
 
     $("#dialog").dialog("close");
 }
@@ -94,7 +94,7 @@ function oddifyLines(selector) {
 }
 
 function storeIngredients() {
-    localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
+    //localStorage.setItem($.trim($("#currentList").text().toLowerCase()) + ".ingredients", JSON.stringify($('#listOfIngredients').html()));
 }
 
 function emptyIngredients() {
@@ -157,11 +157,10 @@ function processSearchedItems(data) {
         stop: function () {
             $('#listOfIngredients').removeClass('droppableArea');
         },
-        axis: "y",
-        containment: ".panel",
+        axis:"y",
         revert: true,
         zIndex: 100,
-        helper: "clone",
+        helper:"clone",
         cursor: "crosshair",
         cursorAt: {
             bottom: 0
@@ -169,4 +168,6 @@ function processSearchedItems(data) {
     });
 
     oddifyLines('#listOfItems li');
+    
+    $("#numberOfFilteredItems").text(data.package.length + " Filtered Items");
 }
