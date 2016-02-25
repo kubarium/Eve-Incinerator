@@ -23,14 +23,7 @@ class Transactions:
             AND i.typeName LIKE ?
             ORDER BY i.typeName
             """, ("%"+name+"%",))
-        '''
-        cur.execute("""
-            SELECT typeID as id, typeName as name, description FROM invTypes i
-            WHERE i.published = 1
-            AND i.typeName LIKE ?
-            ORDER BY i.typeName
-            """, ("%"+name+"%",))
-        '''
+        
         list = [dict(zip(map(lambda x:x[0], cur.description), row)) for row in cur.fetchall()]
 
         data = {
